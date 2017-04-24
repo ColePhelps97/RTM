@@ -16,7 +16,6 @@ public class Switch {
     protected Integer turnType;
     protected String additionalProperties;
     protected UUID id;
-    protected static int i = 10;
 
     public Switch(String name, Double xCoord, Double yCoord, Double zCoord,
                   Track inTrack, Track outTrack1, Track outTrack2,
@@ -65,23 +64,12 @@ public class Switch {
     }
 
     public void addToDB() throws SQLException {
-        /*try {
-            Class.forName("org.postgresql.Driver");
-        } catch (ClassNotFoundException e) {
-            System.out.print(e.getMessage() + "ERROR");
-            return;
-        }
-        String url = "jdbc:postgresql://localhost/railtopomodel";
-        Properties props = new Properties();
-        props.setProperty("user","postgres");
-        props.setProperty("password","postgres");
-        Connection conn = DriverManager.getConnection(url, props);*/
         Connection conn = DBConnection.getPostgresConnection();
 
         Statement addSwitchStatement = conn.createStatement();
 
-        String query = "SELECT addSwitch('" +/*'switch_"+i+"'*/this.name + "', " +
-                "'baseNetwork', NULL, NULL, '" + /*switch_"+i+*/this.name + "_location', 'both', "+
+        String query = "SELECT addSwitch('" + this.name + "', " +
+                "'baseNetwork', NULL, NULL, '" + this.name + "_location', 'both', "+
                 (this.xCoord == null?"NULL":this.xCoord.toString()) + ", " +
                 (this.yCoord == null?"NULL":this.yCoord.toString()) + ", " +
                 (this.zCoord == null?"NULL":this.zCoord.toString()) + ", " +
@@ -93,13 +81,11 @@ public class Switch {
         try {
             System.out.println(query);
             ResultSet addSwitchId = addSwitchStatement.executeQuery(query);
-            addSwitchId.next();
+            //addSwitchId.next();
             this.id = (UUID)addSwitchId.getObject("addSwitch");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-
-        i++;
     }
 
     public static ArrayList<Switch> getSwitches() throws SQLException {
