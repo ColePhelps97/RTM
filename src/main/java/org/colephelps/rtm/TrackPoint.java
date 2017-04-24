@@ -46,12 +46,6 @@ public class TrackPoint {
 
             addTrackPoint.next();
             this.id = (UUID)addTrackPoint.getObject("addTrackPoint");
-//            try {
-//                this.signal = Signal.getSignalInfo(this.geoPointId);
-//            } catch (SQLException e) {
-//                this.signal = null;
-//            }
-
             try {
                 if (this.signal != null && this.signal.geoPointId == this.geoPointId) {
                     this.signal.addSignalToDB(this.id);

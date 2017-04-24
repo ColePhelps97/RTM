@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class SignalGenerator {
@@ -12,8 +13,12 @@ public class SignalGenerator {
     protected String generatorType;
     protected String additionalProperties;
     protected Integer geoPointId;
+    protected Integer oldId;
+    protected UUID id;
+    protected static ArrayList<SignalGenerator> addedSignalGenerators = new ArrayList<SignalGenerator>();
 
-    public SignalGenerator(String name, String generatorType, Integer frequency, String additionalProperties, Integer geoPointId) {
+    public SignalGenerator(Integer oldId, String name, String generatorType, Integer frequency, String additionalProperties, Integer geoPointId) {
+        this.oldId = oldId;
         this.name = name;
         this.generatorType = generatorType;
         this.frequency = frequency;
@@ -32,9 +37,7 @@ public class SignalGenerator {
         );
 
         Boolean hasResult = signalGeneratorInfo.next();
-        //System.out.println(hasResult);
         if(hasResult) {
-            //System.out.println(signalGeneratorInfo.getInt("ID_GEO_POINT"));
             //Get generator type from RAILWAY_OBJ_SIGNAL_GENERATOR_TYPE table
             Statement getSignalGeneratorType = con.createStatement();
             ResultSet signalGeneratorType = getSignalGeneratorType.executeQuery(
@@ -51,6 +54,7 @@ public class SignalGenerator {
                             "WHERE ID =" + signalGeneratorInfo.getInt("ID") + ";"
             );
             SignalGenerator s = new SignalGenerator(
+                    signalGeneratorInfo.getInt("ID"),
                     signalGeneratorName.next() ? signalGeneratorName.getString("NAME") : null,
                     signalGeneratorType.next() ? signalGeneratorType.getString("NAME") : null,
                     signalGeneratorInfo.getInt("FREQUENCY"),
@@ -64,12 +68,20 @@ public class SignalGenerator {
 
     public void addSignalGeneratorToDB(UUID pointId) throws SQLException {
         Statement addSignalGenerator = DBConnection.getPostgresConnection().createStatement();
-        ResultSet signalId = addSignalGenerator.executeQuery(
+        ResultSet signalGeneratorId = addSignalGenerator.executeQuery(
                 "PERFORM addSignalGenerator('" + pointId.toString() + "', " +
                         (this.generatorType == null ? "NULL" : "'" + this.generatorType + "'") + ", " +
                         (this.frequency == null ? "NULL" : "'" + this.frequency.toString() + "'") + ", " +
                         "'" + this.additionalProperties + "');"
         );
 
+        this.id = (UUID)signalGeneratorId.getObject("addSignalGenerator");
+        addedSignalGenerators.add(this);
+    }
+
+    public static SignalGenerator getGeneratorByOldId(Integer oldId) {
+        for(SignalGenerator signalGenerator: addedSignalGenerators)
+            if(signalGenerator.oldId == oldId) return signalGenerator;
+        return null;
     }
 }
